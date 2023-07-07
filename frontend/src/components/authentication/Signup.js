@@ -3,7 +3,11 @@ import { Stack, HStack, VStack, FormControl, FormLabel, Input, InputGroup, Input
 import axios from "axios";
 import { useHistory } from "react-router";
 import { useToast } from "@chakra-ui/toast";
-
+const isEmail = (mail) => {
+    mail = mail.toLowerCase()
+    if (mail.includes('.com') && mail.includes('@')) return true
+    return false;
+}
 export default function Signup() {
     const [show, setShow] = useState(false);
     const handleClick = () => setShow(!show);
@@ -23,6 +27,8 @@ export default function Signup() {
         setShow(!show)
     }
     const submitHandler = async () => {
+        if (!isEmail(email)) { alert('Invalid email'); return; }
+        if (confirmpassword !== password) { alert('Passwords dont match'); return; }
         setloading(true)
         client.post('/user/register', {
             name: name,

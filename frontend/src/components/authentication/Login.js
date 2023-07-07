@@ -63,17 +63,7 @@ export default function Login() {
             >
                 Login
             </Button>
-            <Button
-                variant="solid"
-                colorScheme="red"
-                width="100%"
-                onClick={() => {
-                    setEmail("abcd@gmail.com");
-                    setPassword("1234");
-                }}
-            >
-                Get Guest User Credentials
-            </Button>
+
         </VStack>
     );
 }

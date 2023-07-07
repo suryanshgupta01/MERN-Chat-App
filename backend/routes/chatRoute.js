@@ -2,12 +2,17 @@ const express = require('express')
 const mongoose = require('mongoose')
 const CHAT = require('../models/chatModel')
 const router = express.Router()
+const authoriseuser = require('../middleware/authoriseuser')
+require("dotenv").config()
 
-router.get('/:id', async (req, res) => {
+
+router.get('/', authoriseuser, async (req, res) => {
     //fetch all data
     try {
 
-        const OBJID = req.params.id
+        // const OBJID = req.params.id
+        const OBJID = req.user.id
+        // console.log("objid", OBJID)
         const data = await CHAT.find().populate(["conversation", "people", "latestmessage"]).sort({ latestmessage: -1 })
         const result = data.filter((ele) => {
             return (ele.people[0]._id.toString() === OBJID || ele.people[1]._id.toString() === OBJID)
@@ -34,6 +39,7 @@ router.get('/:id', async (req, res) => {
 //     }
 // })
 
+//NOT USED IN THIS PROJECT
 router.get('/selectchat/:id', async (req, res) => {
     try {
         const ID = req.params.id
@@ -46,13 +52,13 @@ router.get('/selectchat/:id', async (req, res) => {
         //res send
         res.status(400).send({ msg: "id not foud" })
         console.log(`Error in fetching users ${error}`)
-
     }
 
 })
 
-router.post('/create', async (req, res) => {
+router.post('/create', authoriseuser, async (req, res) => {
     // console.log(req.body)
+    // const ID = req.user.id
     const already = await CHAT.findOne({ people: [req.body.people[0], req.body.people[1]] })
     const already2 = await CHAT.findOne({ people: [req.body.people[1], req.body.people[0]] })
     // console.log(already)
@@ -67,9 +73,10 @@ router.post('/create', async (req, res) => {
     res.send(newmsg)
 })
 
-router.delete('/delete/:id', async (req, res) => {
+router.delete('/delete/:id', authoriseuser, async (req, res) => {
+    const ID = req.params.id
     try {
-        const deleted = await CHAT.findOneAndDelete({ _id: req.params.id })
+        const deleted = await CHAT.findOneAndDelete({ _id: ID })
         res.send(deleted)
     } catch (error) {
         console.log(`Error in deleting users ${error}`)

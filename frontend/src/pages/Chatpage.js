@@ -44,14 +44,24 @@ export default function Chatpage() {
 
     const fetchusers = async () => {
         setloading(true)
-        const { data } = await client.get("/user")
+        const { data } = await client.get("/user", {
+            headers: {
+                'Content-Type': 'application/json',
+                'authorization': `Bearer ${userinfo.token}`
+            }
+        })
         setusers(data.filter((ele) => { return ele._id.toString() !== userinfo._id }))
         setloading(false)
     }
 
     const fetchchats = async () => {
         setloading(true)
-        const { data } = await client.get(`/chat/${userinfo._id}`)
+        const { data } = await client.get(`/chat`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'authorization': `Bearer ${userinfo.token}`
+            }
+        })
         // console.log( (userinfo._id))
         setchats(data)
         setloading(false)
@@ -109,6 +119,11 @@ export default function Chatpage() {
             people: [userinfo._id, id],
             isselected: true,
             conversation: [],
+        }, {
+            headers: {
+                'Content-Type': 'application/json',
+                'authorization': `Bearer ${userinfo.token}`
+            }
         })
         onClose()
         // fetchchats()
@@ -120,14 +135,25 @@ export default function Chatpage() {
             console.log(element)
             client.delete(`/msg/delete/${ID}`)
         })
-        client.delete(`/chat/delete/${ele._id}`)
+        client.delete(`/chat/delete/${ele._id}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'authorization': `Bearer ${userinfo.token}`
+            }
+        })
         window.location.reload()
 
     }
     const submitmessage = () => {
         const inputval = msgref.current.value
         msgref.current.value = ""
-        client.post('/msg/create', { sender: userinfo._id, content: inputval, reciever: active._id })
+        client.post('/msg/create',
+            { sender: userinfo._id, content: inputval, reciever: active._id }, {
+            headers: {
+                'Content-Type': 'application/json',
+                'authorization': `Bearer ${userinfo.token}`
+            }
+        })
             .then(({ data }) => {
                 // console.log(data)
                 client.put(`chat/addmsg/${active._id}`, { latestmessage: data._id }).then(({ data: data1 }) => console.log(data1))
@@ -175,11 +201,11 @@ export default function Chatpage() {
 
                 <div className='navbar'>
                     <Tooltip hasArrow arrowSize={15} label='Tap to find user' bg='red.900'>
-                        <Button ref={btnRef} colorScheme='teal' onClick={onOpen}>
+                        <Button ref={btnRef} colorScheme='green' onClick={onOpen}>
                             Search User
                         </Button>
                     </Tooltip>
-                    <Text style={{color:'white'}} fontSize={fontSize}>MERN STACK CHAT APP</Text>
+                    <Text style={{ color: 'white' }} fontSize={fontSize}>MERN STACK CHAT APP</Text>
 
                     {/* <!-- Example single danger button --> */}
                     <div class="btn-group " style={{ marginRight: '3.7rem' }}>

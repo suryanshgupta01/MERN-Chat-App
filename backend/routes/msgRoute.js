@@ -1,10 +1,9 @@
 const express = require('express')
 const router = express.Router()
 const MSG = require('../models/msgModel')
-// router.get('/', (req, res) => {
-//     res.send({ msg: `msg api runing` })
-// })
+const authoriseuser = require('../middleware/authoriseuser')
 
+//DID NOT USE IN THIS PROJECT
 router.get('/:id', async (req, res) => {
     //fetch all data
     try {
@@ -26,7 +25,7 @@ router.get('/:id', async (req, res) => {
         console.log(`Error in fetching users1 ${error}`)
     }
 })
-router.post('/create', async (req, res) => {
+router.post('/create', authoriseuser, async (req, res) => {
     const newmsg = new MSG(req.body)
     newmsg.save()
     res.send(newmsg)
@@ -37,7 +36,7 @@ router.delete('/delete/:id', async (req, res) => {
         const ID = req.params.id
         const data = await MSG.findByIdAndDelete({ _id: ID })
         // data.remove()
-        res.send({"msg":"deleted successfully"})
+        res.send({ "msg": "deleted successfully" })
     } catch (error) {
         //res send
         res.status(400).send({ msg: "id not foud" })
