@@ -1,0 +1,263 @@
+:root {
+  --base: #20eb45;
+  --hover-brightness: 1.2;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+
+.chatbox {
+  display: flex;
+  flex-direction: row;
+  /* background-color: white; */
+}
+
+.userlist {
+  width: 30vw;
+  height: 82vh;
+  background-color: rgb(20, 189, 20);
+  margin: 1rem;
+  /* border-radius: 20px 0px 0px 20px; */
+  overflow: auto;
+  padding: 2rem;
+}
+
+.names {
+  font-size: medium;
+
+}
+
+.singlename {
+  /* margin: 1rem; */
+  border-radius: 10px;
+  padding: 1rem;
+  margin: 1rem 0;
+  /* width: 100%; */
+  display: flex;
+  flex-direction: row;
+  /* border: 3px solid red; */
+  background-color: var(--base);
+}
+
+.singlename span {
+  font-size: 0.8rem;
+}
+
+.singlename img {
+  max-width: 50px !important;
+  border-radius: 50%;
+}
+
+.singlechat {
+  margin: 1rem;
+}
+
+.logout {
+  /* display:inline; */
+  /* position: absolute; */
+  /* right: 0; */
+  margin-left: auto;
+}
+
+.noneselect {
+  width: 90%;
+  height: 90%;
+  margin: auto;
+  /* margin-right: auto; */
+  font-size: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgb(186, 179, 179);
+}
+
+.convobox {
+  width: 68vw;
+  z-index: 2;
+  position: relative;
+  /* overflow: auto; */
+  height: 82vh;
+  margin: 1rem;
+  background-color: white;
+  opacity: 0.6;
+  /* height: 100%; */
+  /* background-color: red; */
+}
+
+.footer {
+  /* bottom: 0; */
+  width: 100vw;
+  padding: 0.5rem 0;
+  opacity: 0.5;
+  text-align: center;
+  background-color: white;
+}
+
+.heading {
+  font-size: 2rem;
+  font-weight: bold;
+  margin: 1rem;
+  display: flex;
+  justify-content: space-between;
+  text-align: center;
+}
+
+.right {
+  text-align: right;
+  margin-left: auto;
+  margin-right: 2rem;
+  background-color: red;
+  padding: 0.5rem;
+  color: white;
+  width: fit-content;
+}
+
+.left {
+  /* text-align: left; */
+  padding: 0.5rem;
+  margin-right: auto;
+  color: white;
+  margin-left: 2rem;
+  text-align: left;
+  width: fit-content;
+  /* width: max-content; */
+  background-color: rgb(26, 212, 26);
+}
+
+.convo {
+  overflow: auto;
+  /* background-color: red; */
+  height: 73%;
+  /* overflow: auto; */
+}
+
+.navbar {
+  width: 100vw;
+  /* height: 20vh; */
+  /* opacity: 0.8; */
+  display: flex;
+  padding: 0.25rem 1.5rem;
+  justify-content: space-between;
+  align-items: center;
+  flex-direction: row;
+  background-color: #028A0F;
+}
+
+.megadiv {
+  display: flex;
+  height: 100vh;
+  /* overflow: hidden; */
+  /* z-index: 1; */
+  background-image: url('./HD-wallpaper-whatsapp-background-cool-dark-green-new-theme-whatsapp.jpg');
+  background-position: center;
+  flex-direction: column;
+}
+
+.msginput>input {
+
+  width: 90%;
+  /* border: 3px solid red; */
+  outline: none;
+  padding: 0 1rem;
+  font-size: 1.5rem;
+
+}
+
+.msginput {
+  display: flex;
+  /* padding: 1rem; */
+  /* position: relative; */
+  /* margin-top: auto; */
+  /* bottom: 3rem; */
+  align-items: center;
+  font-size: 1.5rem;
+  flex-direction: row;
+}
+
+.msginput>button {
+  /* padding: 1rem; */
+  padding: 0.75rem 1rem;
+  /* height: 100%;1 */
+  border-radius: 10px;
+  background-color: rgb(33, 232, 92);
+  /* border: 3px solid red; */
+}
+
+
+.delete {
+  /* float: right; */
+  margin-left: auto;
+  margin-top: auto;
+  margin-bottom: auto;
+  padding: 5px;
+  display: flex;
+  font-size: small;
+  align-items: center;
+  justify-content: center;
+  /* add border radius and width to delete */
+  border-radius: 50%;
+  width: 35px;
+  height: 35px;
+  background-color: rgb(122, 121, 121);
+}
+
+.deselect {
+
+  margin-left: 4rem;
+  margin-top: auto;
+  margin-bottom: auto;
+
+}
+
+@media (width<500px) {
+  .userlist {
+    display: none;
+  }
+
+  
+  .convobox {
+    width: 100vw;
+  }
+}
+
+::selection {
+  background-color: rgb(20, 189, 20);
+  color: white;
+}
+
+::-webkit-scrollbar {
+  background-color: rgb(110, 188, 110);
+  border-radius: 20px;
+  width: 7px;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 20px;
+  background-color: green;
+}
+
+
+
+.heading p {
+  font-size: 1.5rem;
+}
+
+.select {
+  height: 0;
+  /* display: none; */
+}
