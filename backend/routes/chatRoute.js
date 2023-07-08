@@ -50,7 +50,7 @@ router.get('/selectchat/:id', async (req, res) => {
 
     } catch (error) {
         //res send
-        res.status(400).send({ msg: "id not foud" })
+        res.status(400).send({ msg: "id not found" })
         console.log(`Error in fetching users ${error}`)
     }
 

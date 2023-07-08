@@ -24,7 +24,7 @@ router.post('/login', async (req, res) => {
     const { email, password } = req.body
     const user = await USER.findOne({ email })
     if (!user) {
-        res.status(404).send({ "msg": 'User non found' })
+        res.send({ "msg": 'User not found' })
 
     }
     if (user && (await user.comparePass(password))) {
@@ -37,7 +37,7 @@ router.post('/login', async (req, res) => {
         })
     }
     else {
-        return res.status(503).json({ 'msg': 'Invalid credentials' })
+        return res.send({ 'msg': 'Invalid credentials' })
     }
 })
 router.post('/register', async (req, res) => {
@@ -45,7 +45,7 @@ router.post('/register', async (req, res) => {
         const { email } = req.body
         const user1 = await USER.findOne({ email })
         if (user1) {
-            res.status(403).send({ "msg": 'User Already Exists' })
+            res.send({ "msg": 'User Already Exists' })
             return
         }
         const user = new USER(req.body)
@@ -59,7 +59,7 @@ router.post('/register', async (req, res) => {
             _id: user._id
         })
     } catch (error) {
-        res.status(422).json({ 'message': 'Email already exists' })
+        res.json({ 'msg': 'Email already exists' })
     }
 
 })

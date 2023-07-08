@@ -1,8 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import axios from 'axios'
-import { useAxios } from "use-axios-client";
 import { Avatar, Button, Input, Menu, MenuButton, MenuItem, MenuList, Select, Spinner, Text, Tooltip, useDisclosure } from '@chakra-ui/react';
-import CircularProgress from '@mui/material/CircularProgress';
 import {
     Drawer,
     DrawerBody,
@@ -12,18 +10,11 @@ import {
     DrawerContent,
     DrawerCloseButton,
 } from '@chakra-ui/react'
-import {
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalFooter,
-    ModalBody,
-    ModalCloseButton,
-} from '@chakra-ui/react'
+
 import ReactScrollToBottom from 'react-scroll-to-bottom'
 import { TriangleDownIcon, ChevronDownIcon, ViewIcon } from '@chakra-ui/icons'
 import Avatar1 from '../components/Avatar';
+import Loading from '../components/Loading';
 
 export default function Chatpage() {
     const address = "http://localhost:4000";
@@ -179,21 +170,11 @@ export default function Chatpage() {
     const { isOpen: isOpponentOpen, onOpen: onOpponentOpen, onClose: onOpponentClose } = useDisclosure()
     const btnRef = React.useRef()
 
-    if (loading) {
-        console.log("Loading...");
-        return <div>
+    if (loading) return <Loading />
 
-            {/* <CircularProgress color='success' /> */}
-            <Spinner
-                // style={{display:'flex',justifyContent:'center',alignItems:'center'}}
-                thickness='4px'
-                speed='0.75s'
-                emptyColor='gray.200'
-                color='green.600'
-                size='xl'
-            />
-        </div>;
-    } const fontSize = window.innerWidth < 500 ? '4xl' : '2xl';
+
+
+    const fontSize = window.innerWidth < 500 ? '4xl' : '2xl';
 
     return (
         <>
