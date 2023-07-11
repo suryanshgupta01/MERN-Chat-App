@@ -22,7 +22,7 @@ export default function Login() {
             email: email,
             password: password
         }).then((data) => {
-            console.log(data)
+            // console.log(data)
             setLoading(false)
             if (data.data.msg) { alert(data.data.msg); return;}
             localStorage.setItem("userinfo", JSON.stringify(data.data))

@@ -36,7 +36,7 @@ export default function Signup() {
             password: password,
             profilePic: pic,
         }).then((user) => {
-            console.log(user)
+            // console.log(user)
             setloading(false)
             if (user.data.msg) { alert(user.data.msg); return; }
             localStorage.setItem("userinfo", JSON.stringify(user.data))

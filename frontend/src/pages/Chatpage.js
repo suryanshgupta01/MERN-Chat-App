@@ -1,16 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import axios from 'axios'
-import { Avatar, Button, Input, Menu, MenuButton, MenuItem, MenuList, Select, Spinner, Text, Tooltip, useDisclosure } from '@chakra-ui/react';
-import {
-    Drawer,
-    DrawerBody,
-    DrawerFooter,
-    DrawerHeader,
-    DrawerOverlay,
-    DrawerContent,
-    DrawerCloseButton,
-} from '@chakra-ui/react'
-
+import { Avatar, Button, Input, Menu, MenuButton, MenuItem, MenuList, Select, Spinner, Text, Tooltip, useDisclosure, Drawer, DrawerBody, DrawerFooter, DrawerHeader, DrawerOverlay, DrawerContent, DrawerCloseButton, } from '@chakra-ui/react';
 import ReactScrollToBottom from 'react-scroll-to-bottom'
 import { TriangleDownIcon, ChevronDownIcon, ViewIcon } from '@chakra-ui/icons'
 import Avatar1 from '../components/Avatar';
@@ -83,14 +73,14 @@ export default function Chatpage() {
     }, []);
     const searchuser = (name1) => {
         if (name1 === "") {
-            console.log("name", name1)
+            // console.log("name", name1)
             setselected([])
         }
         else {
             name1 = name1.toLowerCase()
             setselected(users.filter((ele) => ele.name.toLowerCase().includes(name1)))
         }
-        console.log(selected)
+        // console.log(selected)
     }
     const findconversation = (ele) => {
         // console.log(ele)
@@ -104,7 +94,6 @@ export default function Chatpage() {
         if (result[0].people[0]._id === userinfo._id) setopponentinfo(result[0].people[1])
         else setopponentinfo(result[0].people[0])
     }
-    console.log(opponentinfo)
     const createConversation = async (id) => {
         client.post('/chat/create', {
             people: [userinfo._id, id],
@@ -123,7 +112,7 @@ export default function Chatpage() {
         // console.log(ele)
         ele.conversation.map((element) => {
             const ID = element._id
-            console.log(element)
+            // console.log(element)
             client.delete(`/msg/delete/${ID}`)
         })
         client.delete(`/chat/delete/${ele._id}`, {
@@ -137,6 +126,7 @@ export default function Chatpage() {
     }
     const submitmessage = () => {
         const inputval = msgref.current.value
+        if (inputval.trim() === "") return;
         msgref.current.value = ""
         client.post('/msg/create',
             { sender: userinfo._id, content: inputval, reciever: active._id }, {
@@ -147,7 +137,8 @@ export default function Chatpage() {
         })
             .then(({ data }) => {
                 // console.log(data)
-                client.put(`chat/addmsg/${active._id}`, { latestmessage: data._id }).then(({ data: data1 }) => console.log(data1))
+                client.put(`chat/addmsg/${active._id}`, { latestmessage: data._id })
+                // .then(({ data: data1 }) => { console.log(data1)})
                 setactive(prevState => ({
                     ...prevState,
                     conversation: [...prevState.conversation, { sender: userinfo._id, content: inputval, reciever: active._id }]
@@ -161,20 +152,17 @@ export default function Chatpage() {
         localStorage.removeItem('userinfo')
         window.location.reload()
     }
-    console.log(active)
-    if (active.length > 0)
-        console.log(active[0].conversation);
-    console.log(chats)
+
     const { isOpen, onOpen, onClose } = useDisclosure()
     const { isOpen: isAvatarOpen, onOpen: onAvatarOpen, onClose: onAvatarClose } = useDisclosure()
     const { isOpen: isOpponentOpen, onOpen: onOpponentOpen, onClose: onOpponentClose } = useDisclosure()
     const btnRef = React.useRef()
+    const isSmall = window.innerWidth < 500
+    const smallandnotactive = active.email === ""
+    const smallandactive = active.email !== ""
 
     if (loading) return <Loading />
 
-
-
-    const fontSize = window.innerWidth < 500 ? '4xl' : '2xl';
 
     return (
         <>
@@ -186,26 +174,26 @@ export default function Chatpage() {
                             Search User
                         </Button>
                     </Tooltip>
-                    <Text style={{ color: 'white' }} fontSize={fontSize}>MERN STACK CHAT APP</Text>
-
-                    {/* <!-- Example single danger button --> */}
-                    <div class="btn-group " style={{ marginRight: '3.7rem' }}>
-                        <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <p >MERN STACK CHAT APP</p>
+                    <div className="btn-group " >
+                        <button type="button" className="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                             {/* <img src={userinfo.profilePic} alt='user pic here' style={{ objectFit: 'cover', width: '30px', height: '30px', borderRadius: '50%' }} /> */}
 
                             <Avatar name={userinfo.name} src={userinfo.profilePic} />
                         </button>
-                        <ul class="dropdown-menu" >
-                            <li class="dropdown-item" onClick={onAvatarOpen}>
+                        <ul className="dropdown-menu" >
+                            <li className="dropdown-item" onClick={onAvatarOpen}>
                                 Profile
                                 <Avatar1 info={userinfo} onClose={onAvatarClose} isOpen={isAvatarOpen} />
                             </li>
-                            <li class="dropdown-item" onClick={logouthandler}>Logout</li>
+                            <li className="dropdown-item" onClick={logouthandler}>Logout</li>
                         </ul>
                     </div>
                 </div>
                 <div className='chatbox'>
-                    <div className='userlist'>
+                    <div className='userlist'
+                        style={isSmall ? { width: (smallandnotactive ? '100vw' : '0vw'), display: (smallandnotactive ? 'block' : 'none') } : null}
+                    >
 
                         <Drawer
                             isOpen={isOpen}
@@ -223,7 +211,8 @@ export default function Chatpage() {
                                     {selected?.map((ele) => (
                                         <>
                                             <p className='singlename' value={ele._id} key={ele._id} onClick={() => createConversation(ele._id)}>
-                                                <img src={ele.profilePic} style={{ objectFit: 'cover' }} />
+                                                <Avatar name={ele.name} src={ele.profilePic} />
+                                                {/* <img src={ele.profilePic} style={{ objectFit: 'cover' }} /> */}
                                                 <div style={{ marginLeft: '1rem', display: 'flex', flexDirection: 'column' }}>
                                                     {ele.name}
                                                     <span>{ele.email}</span>
@@ -247,8 +236,9 @@ export default function Chatpage() {
                                 <>
                                     {ele.isselected ? (
                                         <p className='singlename' value={ele._id} key={ele._id} onClick={() => findconversation(ele)}>
-                                            <img src={ele.people[0]._id.toString() === userinfo._id ? ele.people[1].profilePic : ele.people[0].profilePic}
-                                                style={{ objectFit: 'cover', width: '50px', height: '50px' }} />
+                                            <Avatar name={ele.people[0]._id.toString() === userinfo._id ? ele.people[1].name : ele.people[0].name} src={ele.people[0]._id.toString() === userinfo._id ? ele.people[1].profilePic : ele.people[0].profilePic} />
+
+                                            {/* <img src={ele.people[0]._id.toString() === userinfo._id ? ele.people[1].profilePic : ele.people[0].profilePic} style={{ objectFit: 'cover', width: '50px', height: '50px' }} /> */}
                                             <div style={{ marginLeft: '1rem', display: 'flex', flexDirection: 'column' }}>
                                                 {ele.people[0]._id.toString() === userinfo._id ? ele.people[1].name : ele.people[0].name}
                                                 <br />
@@ -257,20 +247,23 @@ export default function Chatpage() {
                                                         ele.latestmessage.content.length > 15 ?
                                                             ele.latestmessage.content.slice(0, 15) + '...' : ele.latestmessage.content}
                                                     </p>
-                                                ) : <p>(No msg yet) </p>}
+                                                ) : <p>(No messages yet) </p>}
                                             </div>
                                             {/* functionality to deselect chat */}
                                             {/* <div className='deselect'><i className="fa fa-times" style={{ fontSize: '20px' }} aria-hidden="true"></i></div> */}
                                             <div className='delete' onClick={() => deleteConversation(ele)}>
-                                                <i class="fa fa-trash" style={{ fontSize: '20px' }} aria-hidden="true"></i></div>
+                                                <i className="fa fa-trash" style={{ fontSize: '20px' }} aria-hidden="true"></i></div>
                                         </p>) : null}
                                 </>
                             ))}
                         </div>
                     </div>
 
-                    <div className='convobox'>
-                        <div className='heading'><i class="fa-solid fa-arrow-left"
+                    <div className='convobox'
+                        style={isSmall ? { width: (smallandactive ? '100vw' : '0vw'), display: (smallandactive ? 'block' : 'none') } : null}
+                    // style={{ display: (isSmall ? 'block' : 'none') }}
+                    >
+                        <div className='heading'><i className="fa-solid fa-arrow-left"
                             onClick={() => {
                                 setactive({ name: "SELECT USER TO INTERACT", email: "", people: [{ email: "" }, { email: "" }], _id: "" });
                                 setopponentinfo({})
@@ -298,7 +291,7 @@ export default function Chatpage() {
                     </div>
                 </div>
                 {/* <div className='footer'>Created and owned by <a href='https://github.com/suryanshgupta01/'>Suryansh Gupta</a></div> */}
-            </div>
+            </div >
         </>
 
     )

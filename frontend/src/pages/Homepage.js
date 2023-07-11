@@ -21,7 +21,7 @@ export default function Homepage() {
                     boxShadow="lg"
                     borderWidth="1px"
                 >
-                    <Text fontSize="4xl" textAlign='center'>Whatsapp</Text>
+                    <Text fontSize="4xl" textAlign='center'>MERN CHAT APP</Text>
                     <Tabs variant='soft-rounded' colorScheme='green'>
                         <TabList mb="1em">
                             <Tab width="50%">Login</Tab>
