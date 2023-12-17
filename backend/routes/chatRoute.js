@@ -68,9 +68,14 @@ router.post('/create', authoriseuser, async (req, res) => {
         return;
     }
     // console.log("still ran")
-    const newmsg = new CHAT(req.body)
-    newmsg.save()
-    res.send(newmsg)
+    try {
+        const newmsg = new CHAT(req.body)
+        await newmsg.save().then((t) => t.populate(['people']))
+        res.send(newmsg)
+    }
+    catch (error) {
+        console.log(`Error in creating users ${error}`)
+    }
 })
 
 router.delete('/delete/:id', authoriseuser, async (req, res) => {

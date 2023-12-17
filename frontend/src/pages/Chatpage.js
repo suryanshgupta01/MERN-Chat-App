@@ -46,6 +46,7 @@ export default function Chatpage() {
         // console.log( (userinfo._id))
         setchats(data)
         setloading(false)
+        // console.log(data)
 
     }
     // console.log(typeof(userinfo._id))
@@ -85,18 +86,16 @@ export default function Chatpage() {
     const findconversation = (ele) => {
         // console.log(ele)
         const ID = ele._id
-        // setopponentname(ID)
-        // const name1 = ele.people[0].email === userinfo.email ? ele.people[1].name : ele.people[0].name
-        // setactivename(name1)
-        // setactiveid(ID)
+        msgref.current.focus()
         const result = chats.filter((ele) => { return (ele._id.toString() === ID) })
         setactive(result[0])
+        // console.log(result[0])
         if (result[0].people[0]._id === userinfo._id) setopponentinfo(result[0].people[1])
         else setopponentinfo(result[0].people[0])
     }
-    const createConversation = async (id) => {
+    const createConversation = async (ele) => {
         client.post('/chat/create', {
-            people: [userinfo._id, id],
+            people: [userinfo._id, ele._id],
             isselected: true,
             conversation: [],
         }, {
@@ -105,8 +104,20 @@ export default function Chatpage() {
                 'authorization': `Bearer ${userinfo.token}`
             }
         })
+            .then((data) => {
+                // console.log(data.data)
+                const ID = data.data._id
+                setchats(prevState => [data.data, ...prevState])
+                setactive(data.data)
+            })
         onClose()
-        // fetchchats()
+        // console.log(ele)
+        const ID = ele._id
+        const result = chats.filter((ele1) => { return ((ele1.people[0]._id.toString() === ID) || (ele1.people[1]._id.toString() === ID)) })
+        if (result[0] !== undefined)
+            setactive(result[0])
+        if (result[0].people[0]._id === userinfo._id) setopponentinfo(result[0].people[1])
+        else setopponentinfo(result[0].people[0])
     }
     const deleteConversation = async (ele) => {
         // console.log(ele)
@@ -121,30 +132,47 @@ export default function Chatpage() {
                 'authorization': `Bearer ${userinfo.token}`
             }
         })
-        window.location.reload()
-
+            .catch(() => alert("Error deleting message"))
+        const remaining = chats.filter((element) => { return element._id !== ele._id })
+        setchats(remaining)
     }
     const submitmessage = () => {
         const inputval = msgref.current.value
         if (inputval.trim() === "") return;
         msgref.current.value = ""
         client.post('/msg/create',
-            { sender: userinfo._id, content: inputval, reciever: active._id }, {
+            { sender: userinfo._id, content: inputval, reciever: opponentinfo._id }, {
             headers: {
                 'Content-Type': 'application/json',
                 'authorization': `Bearer ${userinfo.token}`
             }
         })
             .then(({ data }) => {
-                // console.log(data)
                 client.put(`chat/addmsg/${active._id}`, { latestmessage: data._id })
-                // .then(({ data: data1 }) => { console.log(data1)})
                 setactive(prevState => ({
                     ...prevState,
-                    conversation: [...prevState.conversation, { sender: userinfo._id, content: inputval, reciever: active._id }]
+                    conversation: [...prevState.conversation, { sender: userinfo._id, content: inputval, reciever: opponentinfo._id, createdAt: (new Date()) }]
                 }))
+                const ID = active._id
+                setchats((prevChats) => {
+                    if (!prevChats || prevChats.length == 0) {
+                        // Handle the case where 'chats' is undefined or an empty array
+                        return prevChats;
+                    }
+                    return prevChats.map((ele) => {
+                        if (ele._id.toString() === ID) {
+                            return {
+                                ...ele,
+                                conversation: [...ele.conversation, { sender: userinfo._id, content: inputval, reciever: opponentinfo._id, createdAt: (new Date()) }],
+                                latestmessage: { sender: userinfo._id, content: inputval, reciever: opponentinfo._id }
+                            };
+                        }
+                        return ele;
+                    });
+                });
             })
             .catch(() => alert("Error sending message"))
+        // console.log(active)
         msgref.current.focus()
     }
 
@@ -160,7 +188,7 @@ export default function Chatpage() {
     const isSmall = window.innerWidth < 500
     const smallandnotactive = active.email === ""
     const smallandactive = active.email !== ""
-
+    console.log(active)
     if (loading) return <Loading />
 
 
@@ -175,7 +203,7 @@ export default function Chatpage() {
                         </Button>
                     </Tooltip>
                     <p >MERN STACK CHAT APP</p>
-                    <div className="btn-group " >
+                    <div className="btn-group " style={{ right: '30px' }} >
                         <button type="button" className="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                             {/* <img src={userinfo.profilePic} alt='user pic here' style={{ objectFit: 'cover', width: '30px', height: '30px', borderRadius: '50%' }} /> */}
 
@@ -210,7 +238,7 @@ export default function Chatpage() {
                                     <Input placeholder='Search...' onChange={(e) => searchuser(e.target.value)} />
                                     {selected?.map((ele) => (
                                         <>
-                                            <p className='singlename' value={ele._id} key={ele._id} onClick={() => createConversation(ele._id)}>
+                                            <p className='singlename' value={ele._id} key={ele._id} onClick={() => createConversation(ele)}>
                                                 <Avatar name={ele.name} src={ele.profilePic} />
                                                 {/* <img src={ele.profilePic} style={{ objectFit: 'cover' }} /> */}
                                                 <div style={{ marginLeft: '1rem', display: 'flex', flexDirection: 'column' }}>
@@ -235,24 +263,29 @@ export default function Chatpage() {
                             {chats?.map((ele) => (
                                 <>
                                     {ele.isselected ? (
-                                        <p className='singlename' value={ele._id} key={ele._id} onClick={() => findconversation(ele)}>
-                                            <Avatar name={ele.people[0]._id.toString() === userinfo._id ? ele.people[1].name : ele.people[0].name} src={ele.people[0]._id.toString() === userinfo._id ? ele.people[1].profilePic : ele.people[0].profilePic} />
+                                        <p className='singlename' value={ele._id} key={ele._id} >
+                                            <div style={{ display: 'flex', flexDirection: 'row' }} onClick={() => findconversation(ele)}>
+                                                <Avatar name={ele.people[0]._id.toString() === userinfo._id ? ele.people[1].name : ele.people[0].name} src={ele.people[0]._id.toString() === userinfo._id ? ele.people[1].profilePic : ele.people[0].profilePic} />
 
-                                            {/* <img src={ele.people[0]._id.toString() === userinfo._id ? ele.people[1].profilePic : ele.people[0].profilePic} style={{ objectFit: 'cover', width: '50px', height: '50px' }} /> */}
-                                            <div style={{ marginLeft: '1rem', display: 'flex', flexDirection: 'column' }}>
-                                                {ele.people[0]._id.toString() === userinfo._id ? ele.people[1].name : ele.people[0].name}
-                                                <br />
-                                                {ele.latestmessage ? (
-                                                    <p>{
-                                                        ele.latestmessage.content.length > 15 ?
-                                                            ele.latestmessage.content.slice(0, 15) + '...' : ele.latestmessage.content}
-                                                    </p>
-                                                ) : <p>(No messages yet) </p>}
+                                                {/* <img src={ele.people[0]._id.toString() === userinfo._id ? ele.people[1].profilePic : ele.people[0].profilePic} style={{ objectFit: 'cover', width: '50px', height: '50px' }} /> */}
+                                                <div style={{ marginLeft: '1rem', display: 'flex', flexDirection: 'column' }}>
+                                                    {ele.people[0]._id.toString() === userinfo._id ? ele.people[1].name : ele.people[0].name}
+                                                    <br />
+                                                    {ele.latestmessage ? (
+                                                        <p>{
+                                                            ele.latestmessage.content.length > 12 ?
+                                                                ele.latestmessage.content.slice(0, 12) + '...' : ele.latestmessage.content}
+                                                        </p>
+                                                    ) : <p>(No messages yet) </p>}
+                                                </div>
                                             </div>
                                             {/* functionality to deselect chat */}
                                             {/* <div className='deselect'><i className="fa fa-times" style={{ fontSize: '20px' }} aria-hidden="true"></i></div> */}
-                                            <div className='delete' onClick={() => deleteConversation(ele)}>
-                                                <i className="fa fa-trash" style={{ fontSize: '20px' }} aria-hidden="true"></i></div>
+                                            <div className='delete' onClick={() => {
+                                                deleteConversation(ele)
+                                            }}
+                                            >
+                                                <i className="fa fa-trash deletebutton" style={{ fontSize: '20px' }} aria-hidden="true"></i></div>
                                         </p>) : null}
                                 </>
                             ))}
@@ -279,18 +312,28 @@ export default function Chatpage() {
                                     {active.conversation?.map((ele) =>
                                     (<div className={'singlechat ' + (ele.sender === userinfo._id ? ' right' : 'left')} key={ele._id}>
                                         {/* {ele.sender === userinfo._id ? 'YOU' : opponentname}: */}
-                                        {ele.content}</div>))}
+                                        {ele.content}
+                                        <p className='time'>
+                                            {(new Date(ele.createdAt).getHours() > 12) ?
+                                                (new Date(ele.createdAt).getHours() - 12) + ":" + (new Date(ele.createdAt).getMinutes()) + " " + "PM" + " "
+                                                : (new Date(ele.createdAt).getHours()) + ":" + (new Date(ele.createdAt).getMinutes()) + " " + "AM" + " "
+                                            }
+                                            {/* {(new Date(ele.createdAt).getDate()) + "/" + (new Date(ele.createdAt).getMonth())} */}
+                                        </p></div>
+                                    ))}
                                 </>
                                 : <p className='noneselect'>NO SELECTED CHAT</p>
                             }
                         </ReactScrollToBottom>
                         <div className='msginput'>
-                            <input type="text" ref={msgref} placeholder="Type a message.." disabled={(active.email === "" ? true : false)} />
+                            <input type="text" ref={msgref} placeholder="Type a message.." disabled={(active.email === "" ? true : false)}
+                                onKeyDown={(e) => (e.key === 'Enter') ? submitmessage() : null}
+                            />
                             <button onClick={submitmessage}>SEND</button>
                         </div>
                     </div>
                 </div>
-                {/* <div className='footer'>Created and owned by <a href='https://github.com/suryanshgupta01/'>Suryansh Gupta</a></div> */}
+                <div className='footer'>Created and owned by Suryansh Gupta - <b><a href='https://github.com/suryanshgupta01/MERN-Chat-App/'>Github</a></b></div>
             </div >
         </>
 

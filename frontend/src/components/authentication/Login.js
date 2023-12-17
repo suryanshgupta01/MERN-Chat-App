@@ -24,10 +24,10 @@ export default function Login() {
         }).then((data) => {
             // console.log(data)
             setLoading(false)
-            if (data.data.msg) { alert(data.data.msg); return;}
+            if (data.data.msg) { alert(data.data.msg); return; }
             localStorage.setItem("userinfo", JSON.stringify(data.data))
             window.location.reload()
-        }).catch((e)=>{
+        }).catch((e) => {
             console.log(e)
             setLoading(false)
         })
