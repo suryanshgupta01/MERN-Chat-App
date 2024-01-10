@@ -5,23 +5,80 @@ import ReactScrollToBottom from 'react-scroll-to-bottom'
 import { TriangleDownIcon, ChevronDownIcon, ViewIcon } from '@chakra-ui/icons'
 import Avatar1 from '../components/Avatar';
 import Loading from '../components/Loading';
+import io from "socket.io-client";
+import Lottie from "react-lottie";
+import animationData from "../components/Animation - Typing.json";
 
+const address = "http://localhost:4000";
+var socket
+const defaultOptions = {
+    loop: true,
+    autoplay: true,
+    animationData: animationData,
+    rendererSettings: {
+        preserveAspectRatio: "xMidYMid slice",
+    },
+};
 export default function Chatpage() {
-    const address = "http://localhost:4000";
     const [chats, setchats] = useState([]);
     const [users, setusers] = useState([]);
     const [selected, setselected] = useState([]);
     const [loading, setloading] = useState(true);
     const [active, setactive] = useState({ name: "SELECT USER TO INTERACT", email: "", conversation: [], people: [{ email: "" }, { email: "" }], _id: "" });
+    const [socketConnected, setSocketConnected] = useState(false);
+    const [typing, setTyping] = useState(false);
+    const [istyping, setIsTyping] = useState(false);
     const [opponentinfo, setopponentinfo] = useState({});
     const msgref = useRef("")
+    const userinfo = JSON.parse(localStorage.getItem('userinfo'))
 
+    useEffect(() => {
+        socket = io(address);
+        socket.emit("setup", userinfo);
+        socket.on("connected", () => setSocketConnected(true));
+        socket.on("typing", () => setIsTyping(true));
+        socket.on("stoptyping", () => setIsTyping(false));
+    }, []);
 
-
+    useEffect(() => {
+        socket.on("msg received", (msg) => {
+            console.log(msg)
+            setactive(prevState => {
+                const n = prevState.conversation.length;
+                if (n === 0 || getcustomedate(prevState.conversation[n - 1]) !== getcustomedate({ createdAt: new Date() })) {
+                    prevState = {
+                        ...prevState,
+                        conversation: [...prevState.conversation, { isDate: true, message: getcustomedate({ createdAt: new Date() }) }]
+                    };
+                }
+                if (n == 0 || prevState.conversation[n - 1].isDate || msg._id !== prevState.conversation[n - 1]._id) {
+                    return {
+                        ...prevState,
+                        conversation: [...prevState.conversation, msg]
+                    }
+                } else return prevState
+            });
+            const recieverID = msg.reciever
+            const senderID = msg.sender
+            setchats(prevChats => {
+                return prevChats.map((ele) => {
+                    if (((ele.people[0]._id.toString() === recieverID && ele.people[1]._id.toString() === senderID) || (ele.people[0]._id.toString() === senderID && ele.people[1]._id.toString() === recieverID)) && (msg._id !== ele.latestmessage._id)) {
+                        
+                        return {
+                            ...ele,
+                            conversation: [...ele.conversation, msg],
+                            latestmessage: msg
+                        };
+                    } else {
+                        return ele;
+                    }
+                })
+            })
+        });
+    }, []);
     const client = axios.create({
         baseURL: address
     });
-    const userinfo = JSON.parse(localStorage.getItem('userinfo'))
 
     const fetchusers = async () => {
         setloading(true)
@@ -34,7 +91,27 @@ export default function Chatpage() {
         setusers(data.filter((ele) => { return ele._id.toString() !== userinfo._id }))
         setloading(false)
     }
-
+    const months = ['January', 'February', 'Marcch', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const getcustomedate = (ele) => {
+        var month = months[new Date(ele.createdAt).getMonth()]
+        var date = new Date(ele.createdAt).getDate()
+        return month + " " + date
+    }
+    const addDates = (data) => {
+        const newdata = data.map((ele, index) => {
+            var n = ele.conversation.length
+            if (n == 0) return ele
+            var last = getcustomedate(ele.conversation[n - 1])
+            for (var i = n - 1; i >= 0; i--) {
+                if (last === getcustomedate(ele.conversation[i])) continue;
+                ele.conversation.splice(i + 1, 0, { isDate: true, message: last })
+                last = getcustomedate(ele.conversation[i])
+            }
+            ele.conversation.splice(0, 0, { isDate: true, message: last })
+            return ele
+        })
+        return newdata
+    }
     const fetchchats = async () => {
         setloading(true)
         const { data } = await client.get(`/chat`, {
@@ -44,7 +121,8 @@ export default function Chatpage() {
             }
         })
         // console.log( (userinfo._id))
-        setchats(data)
+        const updated = addDates(data)
+        setchats(updated)
         setloading(false)
         // console.log(data)
 
@@ -74,7 +152,6 @@ export default function Chatpage() {
     }, []);
     const searchuser = (name1) => {
         if (name1 === "") {
-            // console.log("name", name1)
             setselected([])
         }
         else {
@@ -89,6 +166,7 @@ export default function Chatpage() {
         msgref.current.focus()
         const result = chats.filter((ele) => { return (ele._id.toString() === ID) })
         setactive(result[0])
+        socket.emit("join chat", result[0]._id);
         // console.log(result[0])
         if (result[0].people[0]._id === userinfo._id) setopponentinfo(result[0].people[1])
         else setopponentinfo(result[0].people[0])
@@ -106,9 +184,9 @@ export default function Chatpage() {
         })
             .then((data) => {
                 // console.log(data.data)
-                const ID = data.data._id
                 setchats(prevState => [data.data, ...prevState])
                 setactive(data.data)
+                setopponentinfo(ele)
             })
         onClose()
         // console.log(ele)
@@ -135,13 +213,16 @@ export default function Chatpage() {
             .catch(() => alert("Error deleting message"))
         const remaining = chats.filter((element) => { return element._id !== ele._id })
         setchats(remaining)
+        setactive({ name: "SELECT USER TO INTERACT", email: "", conversation: [], people: [{ email: "" }, { email: "" }], _id: "" })
     }
     const submitmessage = () => {
         const inputval = msgref.current.value
         if (inputval.trim() === "") return;
         msgref.current.value = ""
+        socket.emit("stoptyping", active._id);
+
         client.post('/msg/create',
-            { sender: userinfo._id, content: inputval, reciever: opponentinfo._id }, {
+            { sender: userinfo._id, content: inputval, reciever: opponentinfo._id, createdAt: new Date() }, {
             headers: {
                 'Content-Type': 'application/json',
                 'authorization': `Bearer ${userinfo.token}`
@@ -149,46 +230,115 @@ export default function Chatpage() {
         })
             .then(({ data }) => {
                 client.put(`chat/addmsg/${active._id}`, { latestmessage: data._id })
-                setactive(prevState => ({
-                    ...prevState,
-                    conversation: [...prevState.conversation, { sender: userinfo._id, content: inputval, reciever: opponentinfo._id, createdAt: (new Date()) }]
-                }))
-                const ID = active._id
-                setchats((prevChats) => {
-                    if (!prevChats || prevChats.length == 0) {
-                        // Handle the case where 'chats' is undefined or an empty array
-                        return prevChats;
+                socket.emit("new msg", data)
+                setactive(prevState => {
+                    const n = prevState.conversation.length;
+                    if (n === 0 || getcustomedate(prevState.conversation[n - 1]) !== getcustomedate({ createdAt: new Date() })) {
+                        prevState = {
+                            ...prevState,
+                            conversation: [...prevState.conversation, { isDate: true, message: getcustomedate({ createdAt: new Date() }) }]
+                        };
                     }
-                    return prevChats.map((ele) => {
-                        if (ele._id.toString() === ID) {
+                    //socket io laga diya
+                    if (n == 0 || prevState.conversation[n - 1].isDate || data._id !== prevState.conversation[n - 1]._id)
+                        return {
+                            ...prevState,
+                            conversation: [...prevState.conversation, data]
+                        };
+                    else return prevState
+                });
+                const recieverID = data.reciever
+                const senderID = data.sender
+                var index = -1
+                setchats(prevChats => {
+                    return prevChats.map((ele, ind) => {
+                        if ((ele.people[0]._id.toString() === recieverID && ele.people[1]._id.toString() === senderID) || (ele.people[0]._id.toString() === senderID && ele.people[1]._id.toString() === recieverID)) {
+                            
+                            index = ind
                             return {
                                 ...ele,
-                                conversation: [...ele.conversation, { sender: userinfo._id, content: inputval, reciever: opponentinfo._id, createdAt: (new Date()) }],
-                                latestmessage: { sender: userinfo._id, content: inputval, reciever: opponentinfo._id }
+                                conversation: [...ele.conversation, data],
+                                latestmessage: data
                             };
+                        } else {
+                            return ele;
                         }
-                        return ele;
-                    });
+                    })
+                })
+                setchats((prevChats) => {
+                    if (index === -1) return prevChats;
+                    const removedElement = prevChats.splice(index, 1)[0];
+                    return [removedElement, ...prevChats];
                 });
             })
             .catch(() => alert("Error sending message"))
         // console.log(active)
         msgref.current.focus()
     }
+    const handlefilesubmit = (e) => {
+        e.preventDefault()
+        const file = new FileReader()
+        file.onloadend = () => {
+            setpreviewinfo({
+                preview: true,
+                name: "PREVIEW",
+                previewpic: file.result,
+                receiver: opponentinfo.name,
+                sendfile: () => {
+                    msgref.current.value = file.result
+                    submitmessage()
+                }
+            })
+            onPreviewOpen()
+        }
+        file.readAsDataURL(e.target.files[0])
 
+    }
+    const prettifyTime = (time) => {
+        var hour = new Date(time).getHours()
+        var min = new Date(time).getMinutes()
+        var suffix = "AM";
+        if (hour >= 12) { hour -= 12; suffix = "PM" }
+        if (hour.toString().length === 1) hour = "0" + hour.toString()
+        if (min.toString().length === 1) min = "0" + min.toString()
+        return hour + ":" + min + " " + suffix
+    }
+    const handleTyping = () => {
+        if (!socketConnected) return;
+        if (!typing) {
+            setTyping(true);
+            socket.emit("typing", active._id);
+        }
+        let lastTypingTime = new Date().getTime();
+        var timerLength = 2000;
+        setTimeout(() => {
+            var timeNow = new Date().getTime();
+            var timeDiff = timeNow - lastTypingTime;
+            if (timeDiff >= timerLength && typing) {
+                socket.emit("stoptyping", active._id);
+                setTyping(false);
+            }
+        }, timerLength);
+    }
+    const isImage = (url) => {
+        if (url === undefined) return false;
+        if (url.startsWith("data:image") && url.includes('base64')) return true;
+        return false
+    }
     const logouthandler = () => {
         localStorage.removeItem('userinfo')
         window.location.reload()
     }
-
+    const [previewinfo, setpreviewinfo] = useState({});
     const { isOpen, onOpen, onClose } = useDisclosure()
     const { isOpen: isAvatarOpen, onOpen: onAvatarOpen, onClose: onAvatarClose } = useDisclosure()
+    const { isOpen: isPreviewOpen, onOpen: onPreviewOpen, onClose: onPreviewClose } = useDisclosure()
     const { isOpen: isOpponentOpen, onOpen: onOpponentOpen, onClose: onOpponentClose } = useDisclosure()
     const btnRef = React.useRef()
     const isSmall = window.innerWidth < 500
     const smallandnotactive = active.email === ""
     const smallandactive = active.email !== ""
-    console.log(active)
+    // console.log(active)
     if (loading) return <Loading />
 
 
@@ -272,11 +422,18 @@ export default function Chatpage() {
                                                     {ele.people[0]._id.toString() === userinfo._id ? ele.people[1].name : ele.people[0].name}
                                                     <br />
                                                     {ele.latestmessage ? (
-                                                        <p>{
-                                                            ele.latestmessage.content.length > 12 ?
-                                                                ele.latestmessage.content.slice(0, 12) + '...' : ele.latestmessage.content}
-                                                        </p>
-                                                    ) : <p>(No messages yet) </p>}
+                                                        !isImage(ele.latestmessage.content) ? (
+                                                            <p>
+                                                                {ele.latestmessage.content.length > 20
+                                                                    ? ele.latestmessage.content.slice(0, 20).toLowerCase() + '...'
+                                                                    : ele.latestmessage.content}
+                                                            </p>
+                                                        ) : (
+                                                                <p className='makerow'><img src={ele.latestmessage.content} height="10px" style={{borderRadius:'0', marginRight:'10px'}}/> Photo</p>
+                                                        )
+                                                    ) : (
+                                                        <p>No messages yet</p>
+                                                    )}
                                                 </div>
                                             </div>
                                             {/* functionality to deselect chat */}
@@ -292,10 +449,12 @@ export default function Chatpage() {
                         </div>
                     </div>
 
-                    <div className='convobox'
-                        style={isSmall ? { width: (smallandactive ? '100vw' : '0vw'), display: (smallandactive ? 'block' : 'none') } : null}
-                    // style={{ display: (isSmall ? 'block' : 'none') }}
-                    >
+                    {/* <div className='convobox' style={{ pointerEvents: active.email === "" ? 'none' : 'auto' }}
+                        style={isSmall ? { width: (smallandactive ? '100vw' : '0vw'), display: (smallandactive ? 'block' : 'none') } : null}> */}
+                    <div className='convobox' style={{
+                        pointerEvents: active.email === "" ? 'none' : 'auto',
+                        ...(isSmall ? { width: smallandactive ? '100vw' : '0vw', display: smallandactive ? 'block' : 'none' } : null),
+                    }}>
                         <div className='heading'><i className="fa-solid fa-arrow-left"
                             onClick={() => {
                                 setactive({ name: "SELECT USER TO INTERACT", email: "", people: [{ email: "" }, { email: "" }], _id: "" });
@@ -309,24 +468,53 @@ export default function Chatpage() {
                         <ReactScrollToBottom className='convo'>
                             {active.email !== "" ?
                                 <>
-                                    {active.conversation?.map((ele) =>
-                                    (<div className={'singlechat ' + (ele.sender === userinfo._id ? ' right' : 'left')} key={ele._id}>
-                                        {/* {ele.sender === userinfo._id ? 'YOU' : opponentname}: */}
-                                        {ele.content}
-                                        <p className='time'>
-                                            {(new Date(ele.createdAt).getHours() > 12) ?
-                                                (new Date(ele.createdAt).getHours() - 12) + ":" + (new Date(ele.createdAt).getMinutes()) + " " + "PM" + " "
-                                                : (new Date(ele.createdAt).getHours()) + ":" + (new Date(ele.createdAt).getMinutes()) + " " + "AM" + " "
-                                            }
-                                            {/* {(new Date(ele.createdAt).getDate()) + "/" + (new Date(ele.createdAt).getMonth())} */}
-                                        </p></div>
-                                    ))}
+                                    {active.conversation?.map((ele, ind) =>
+                                        (ele.isDate) ? <p className='date'>
+                                            {ele.message}
+                                        </p> :
+                                            (<div className={'singlechat ' + (ele.sender === userinfo._id ? ' right' : 'left')} key={ele._id}>
+                                                {/* {ele.sender === userinfo._id ? 'YOU' : opponentname}: */}
+                                                {isImage(ele.content) ? <img src={ele.content} style={{width:'22.5rem'}} alt="image should be here"/> : ele.content}
+                                                <p className='time'>
+                                                    {prettifyTime(ele.createdAt)}
+                                                </p></div>
+                                            ))}
                                 </>
                                 : <p className='noneselect'>NO SELECTED CHAT</p>
                             }
+                            {istyping ? <div className='typing'>
+                                <Lottie
+                                    options={defaultOptions}
+                                    // height={50}
+                                    width={70}
+                                    style={{ marginBottom: 15, marginLeft: 0 }}
+                                />
+                            </div> : <></>}
                         </ReactScrollToBottom>
                         <div className='msginput'>
-                            <input type="text" ref={msgref} placeholder="Type a message.." disabled={(active.email === "" ? true : false)}
+
+                            <label htmlFor="file" className="sendfile">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="24"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="#000000"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <path d="M4 22h14a2 2 0 002-2V7.5L14.5 2H6a2 2 0 00-2 2v4" />
+                                    <path d="M14 2v6h6" />
+                                    <path d="M2 15h10" />
+                                    <path d="M9 18l3-3-3-3" />
+                                </svg>
+                            </label>
+
+                            <Avatar1 info={previewinfo} onClose={onPreviewClose} isOpen={isPreviewOpen} />
+                            <input type="file" name="file" id="file" style={{ display: 'none' }} accept='image/*' onChange={(e) => handlefilesubmit(e)} />
+                            <input type="text" ref={msgref} placeholder="Type a message.." onChange={() => handleTyping()}
                                 onKeyDown={(e) => (e.key === 'Enter') ? submitmessage() : null}
                             />
                             <button onClick={submitmessage}>SEND</button>

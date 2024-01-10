@@ -28,7 +28,6 @@ export default function Login() {
             localStorage.setItem("userinfo", JSON.stringify(data.data))
             window.location.reload()
         }).catch((e) => {
-            console.log(e)
             setLoading(false)
         })
     }

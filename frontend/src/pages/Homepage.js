@@ -24,15 +24,15 @@ export default function Homepage() {
                     <Text fontSize="4xl" textAlign='center'>MERN CHAT APP</Text>
                     <Tabs variant='soft-rounded' colorScheme='green'>
                         <TabList mb="1em">
-                            <Tab width="50%">Login</Tab>
                             <Tab width="50%">Signup</Tab>
+                            <Tab width="50%">Login</Tab>
                         </TabList>
                         <TabPanels>
                             <TabPanel>
-                                <Login />
+                                <Signup />
                             </TabPanel>
                             <TabPanel>
-                                <Signup />
+                                <Login />
                             </TabPanel>
                         </TabPanels>
                     </Tabs>

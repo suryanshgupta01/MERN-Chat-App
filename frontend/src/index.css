@@ -67,9 +67,7 @@ code {
   border-radius: 50%;
 }
 
-.singlechat {
-  margin: 1rem;
-}
+
 
 .logout {
   /* display:inline; */
@@ -94,13 +92,10 @@ code {
   width: 68vw;
   z-index: 2;
   position: relative;
-  /* overflow: auto; */
   height: 82vh;
   margin: 1rem;
   background-color: white;
-  opacity: 0.75;
-  /* height: 100%; */
-  /* background-color: red; */
+  opacity: 0.85;
 }
 
 .footer {
@@ -121,37 +116,59 @@ code {
   text-align: center;
 }
 
+.singlechat {
+  padding: 6px 7px 0px 9px;
+  max-width: 70%;
+  margin: 1rem;
+  border-radius: 4px;
+  word-break: break-all;
+  /* overflow-wrap: break-word; */
+  width: fit-content;
+  color: #E9EDEF;
+}
+
 .right {
   text-align: right;
   margin-left: auto;
   margin-right: 2rem;
   background-color: red;
-  padding: 0.5rem 0.5rem 0.02rem 0.5rem;
-  color: white;
-  max-width: 70%;
-  border-radius: 4px;
-  /* word-break: break-all; */
-  overflow-wrap: break-word;
-  width: fit-content;
 }
 
 .left {
-  /* text-align: left; */
-  padding: 0 0.5rem;
   margin-right: auto;
   color: white;
   margin-left: 2rem;
   text-align: left;
   background-color: rgb(26, 212, 26);
-  max-width: 70%;
-  border-radius: 4px;
-  /* word-break: break-all; */
-  overflow-wrap: break-word;
+}
+
+.typing {
+  height: 6.5rem;
+  margin-left: 1.5rem;
+}
+
+.sendfile {
+  margin-left: 1rem;
+
+}
+
+.date {
+  margin-left: auto;
+  margin-right: auto;
+  color: white;
+  background-color: #182229;
+  padding: 5px 12px 6px;
+  font-size: 12px;
   width: fit-content;
+  /* width: 150px; */
+  border-radius: 8px;
+  text-align: center;
 }
 
 .singlechat .time {
   font-size: 0.8rem;
+  padding: 0;
+  color: #FFFFFF99;
 }
 
 .convo {
@@ -206,12 +223,21 @@ code {
 
 .msginput>button {
   /* padding: 1rem; */
-  padding: 0.65rem 0.85rem;
+  padding: 0.60rem 0.85rem;
   border-radius: 10px;
   background-color: rgb(33, 232, 92);
   /* border: 3px solid red; */
 }
 
+.makerow {
+  display: flex;
+  flex-direction: row;
+}
+
+.makecol {
+  display: flex;
+  flex-direction: column;
+}
 
 .delete {
   /* float: right; */
@@ -286,6 +312,10 @@ code {
   .convo {
     /* background-color: red; */
     height: 80.5%;
+  }
+
+  .singlechat>img {
+    width: 12.5rem;
   }
 
   .footer {
