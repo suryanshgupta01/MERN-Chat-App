@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import axios from 'axios'
-import { Avatar, Button, Input, Menu, MenuButton, MenuItem, MenuList, Select, Spinner, Text, Tooltip, useDisclosure, Drawer, DrawerBody, DrawerFooter, DrawerHeader, DrawerOverlay, DrawerContent, DrawerCloseButton, } from '@chakra-ui/react';
+import { Avatar, Button, Input, Menu, MenuButton, MenuItem, MenuList, Select, Spinner, Text, Tooltip, useDisclosure, Drawer, DrawerBody, DrawerFooter, DrawerHeader, DrawerOverlay, DrawerContent, DrawerCloseButton, useTab, } from '@chakra-ui/react';
 import ReactScrollToBottom from 'react-scroll-to-bottom'
 import { TriangleDownIcon, ChevronDownIcon, ViewIcon } from '@chakra-ui/icons'
 import Avatar1 from '../components/Avatar';
@@ -8,6 +8,7 @@ import Loading from '../components/Loading';
 import io from "socket.io-client";
 import Lottie from "react-lottie";
 import animationData from "../components/Animation - Typing.json";
+import { set } from 'mongoose';
 
 const address = "http://localhost:4000";
 var socket
@@ -20,8 +21,13 @@ const defaultOptions = {
     },
 };
 export default function Chatpage() {
+    const client = axios.create({
+        baseURL: address
+    });
+
     const [chats, setchats] = useState([]);
     const [users, setusers] = useState([]);
+    const [idnamemap, setidnamemap] = useState(new Map());
     const [selected, setselected] = useState([]);
     const [loading, setloading] = useState(true);
     const [active, setactive] = useState({ name: "SELECT USER TO INTERACT", email: "", conversation: [], people: [{ email: "" }, { email: "" }], _id: "" });
@@ -29,8 +35,27 @@ export default function Chatpage() {
     const [typing, setTyping] = useState(false);
     const [istyping, setIsTyping] = useState(false);
     const [opponentinfo, setopponentinfo] = useState({});
+    const handleupdatepic = async (e) => {
+        e.preventDefault()
+        const file = new FileReader()
+        file.onloadend = async () => {
+            localStorage.setItem('userinfo', JSON.stringify({ profilePic: file.result, name: userinfo.name, email: userinfo.email, token: userinfo.token, _id: userinfo._id }))
+            setuserinfo({ ...userinfo, profilePic: file.result })
+            
+            const { data } = await client.put(`/user/updatepic/${userinfo._id}`,
+                { profilePic: file.result, }, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'authorization': `Bearer ${userinfo.token}`
+                }
+            })
+            console.log(data)
+        }
+        file.readAsDataURL(e.target.files[0])
+    }
+    const [userinfo, setuserinfo] = useState({ ...JSON.parse(localStorage.getItem('userinfo')), isSelf: true, handleupdatepic: handleupdatepic });
     const msgref = useRef("")
-    const userinfo = JSON.parse(localStorage.getItem('userinfo'))
+    // const userinfo = JSON.parse(localStorage.getItem('userinfo'))
 
     useEffect(() => {
         socket = io(address);
@@ -40,9 +65,9 @@ export default function Chatpage() {
         socket.on("stoptyping", () => setIsTyping(false));
     }, []);
 
+    let funcused = false
     useEffect(() => {
         socket.on("msg received", (msg) => {
-            console.log(msg)
             setactive(prevState => {
                 const n = prevState.conversation.length;
                 if (n === 0 || getcustomedate(prevState.conversation[n - 1]) !== getcustomedate({ createdAt: new Date() })) {
@@ -52,6 +77,30 @@ export default function Chatpage() {
                     };
                 }
                 if (n == 0 || prevState.conversation[n - 1].isDate || msg._id !== prevState.conversation[n - 1]._id) {
+                    if (document.visibilityState !== 'visible') {
+                        setidnamemap(prevState => {
+                            const senderinfo = prevState.get(msg.sender)
+                            const sendnotification = () => {
+                                console.log("called at ", new Date())
+                                new Notification(`${senderinfo.name} - Whatsapp Clone`, {
+                                    body: msg.content,
+                                    // tag: 'latest_message',
+                                    icon: senderinfo.profilePic ? senderinfo.profilePic : "https://www.pngitem.com/pimgs/m/146-1468479_my-profile-icon-blank-profile-picture-circle-hd.png",
+                                    silent: true,
+                                })
+                            }
+                            if (!funcused) {
+                                funcused = true
+                                sendnotification()
+                                setTimeout(() => {
+                                    funcused = false
+                                }, 20000);
+                            }
+                            return prevState
+
+                        })
+                    }
+
                     return {
                         ...prevState,
                         conversation: [...prevState.conversation, msg]
@@ -63,7 +112,6 @@ export default function Chatpage() {
             setchats(prevChats => {
                 return prevChats.map((ele) => {
                     if (((ele.people[0]._id.toString() === recieverID && ele.people[1]._id.toString() === senderID) || (ele.people[0]._id.toString() === senderID && ele.people[1]._id.toString() === recieverID)) && (msg._id !== ele.latestmessage._id)) {
-                        
                         return {
                             ...ele,
                             conversation: [...ele.conversation, msg],
@@ -74,14 +122,14 @@ export default function Chatpage() {
                     }
                 })
             })
+
         });
     }, []);
-    const client = axios.create({
-        baseURL: address
-    });
+
+
 
     const fetchusers = async () => {
-        setloading(true)
+        // setloading(true)
         const { data } = await client.get("/user", {
             headers: {
                 'Content-Type': 'application/json',
@@ -89,9 +137,16 @@ export default function Chatpage() {
             }
         })
         setusers(data.filter((ele) => { return ele._id.toString() !== userinfo._id }))
+        console.log(users)
+        let updatedMap = new Map();
+        data.forEach((ele) => {
+            updatedMap.set(ele._id.toString(), ele);
+        })
+        setidnamemap(updatedMap);
+        console.log(updatedMap)
         setloading(false)
     }
-    const months = ['January', 'February', 'Marcch', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     const getcustomedate = (ele) => {
         var month = months[new Date(ele.createdAt).getMonth()]
         var date = new Date(ele.createdAt).getDate()
@@ -113,7 +168,7 @@ export default function Chatpage() {
         return newdata
     }
     const fetchchats = async () => {
-        setloading(true)
+        // setloading(true)
         const { data } = await client.get(`/chat`, {
             headers: {
                 'Content-Type': 'application/json',
@@ -253,7 +308,7 @@ export default function Chatpage() {
                 setchats(prevChats => {
                     return prevChats.map((ele, ind) => {
                         if ((ele.people[0]._id.toString() === recieverID && ele.people[1]._id.toString() === senderID) || (ele.people[0]._id.toString() === senderID && ele.people[1]._id.toString() === recieverID)) {
-                            
+
                             index = ind
                             return {
                                 ...ele,
@@ -294,11 +349,13 @@ export default function Chatpage() {
         file.readAsDataURL(e.target.files[0])
 
     }
+
     const prettifyTime = (time) => {
         var hour = new Date(time).getHours()
         var min = new Date(time).getMinutes()
         var suffix = "AM";
         if (hour >= 12) { hour -= 12; suffix = "PM" }
+        if (hour == 0) hour = 12
         if (hour.toString().length === 1) hour = "0" + hour.toString()
         if (min.toString().length === 1) min = "0" + min.toString()
         return hour + ":" + min + " " + suffix
@@ -347,11 +404,11 @@ export default function Chatpage() {
             <div className='megadiv'>
 
                 <div className='navbar'>
-                    <Tooltip hasArrow arrowSize={15} label='Tap to find user' bg='red.900'>
-                        <Button ref={btnRef} colorScheme='green' onClick={onOpen}>
-                            Search User
-                        </Button>
-                    </Tooltip>
+                    {/* <Tooltip hasArrow arrowSize={15} label='Tap to find user' bg='red.900'> */}
+                    <Button ref={btnRef} colorScheme='green' onClick={onOpen}>
+                        Search User
+                    </Button>
+                    {/* </Tooltip> */}
                     <p >MERN STACK CHAT APP</p>
                     <div className="btn-group " style={{ right: '30px' }} >
                         <button type="button" className="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
@@ -376,7 +433,7 @@ export default function Chatpage() {
                         <Drawer
                             isOpen={isOpen}
                             placement='left'
-                            onClose={onClose}
+                            onClose={() => { onClose(); setselected([]); }}
                             finalFocusRef={btnRef}
                         >
                             <DrawerOverlay />
@@ -410,7 +467,7 @@ export default function Chatpage() {
                             </DrawerContent>
                         </Drawer>
                         <div className='names' >
-                            {chats?.map((ele) => (
+                            {(chats.length > 0) ? chats.map((ele) => (
                                 <>
                                     {ele.isselected ? (
                                         <p className='singlename' value={ele._id} key={ele._id} >
@@ -429,7 +486,7 @@ export default function Chatpage() {
                                                                     : ele.latestmessage.content}
                                                             </p>
                                                         ) : (
-                                                                <p className='makerow'><img src={ele.latestmessage.content} height="10px" style={{borderRadius:'0', marginRight:'10px'}}/> Photo</p>
+                                                            <p className='makerow'><img src={ele.latestmessage.content} width="20px" style={{ borderRadius: '0', marginRight: '10px' }} /> Photo</p>
                                                         )
                                                     ) : (
                                                         <p>No messages yet</p>
@@ -445,7 +502,23 @@ export default function Chatpage() {
                                                 <i className="fa fa-trash deletebutton" style={{ fontSize: '20px' }} aria-hidden="true"></i></div>
                                         </p>) : null}
                                 </>
-                            ))}
+                            )) : <div style={{
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                height: "100%",
+                                width: "100%"
+                                // backgroundColor:'green'
+                            }}>
+                                <Spinner
+                                    thickness='4px'
+                                    speed='0.75s'
+                                    emptyColor='gray.200'
+                                    color='green.600'
+                                    size='xl'
+                                />
+                            </div>
+                            }
                         </div>
                     </div>
 
@@ -474,7 +547,7 @@ export default function Chatpage() {
                                         </p> :
                                             (<div className={'singlechat ' + (ele.sender === userinfo._id ? ' right' : 'left')} key={ele._id}>
                                                 {/* {ele.sender === userinfo._id ? 'YOU' : opponentname}: */}
-                                                {isImage(ele.content) ? <img src={ele.content} style={{width:'22.5rem'}} alt="image should be here"/> : ele.content}
+                                                {isImage(ele.content) ? <img src={ele.content} style={{ width: '22.5rem' }} alt="image should be here" /> : ele.content}
                                                 <p className='time'>
                                                     {prettifyTime(ele.createdAt)}
                                                 </p></div>

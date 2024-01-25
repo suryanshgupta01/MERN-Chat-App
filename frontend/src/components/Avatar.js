@@ -24,13 +24,25 @@ const Avatar1 = ({ info, isOpen, onClose }) => {
                         {info.email}
                     </ModalBody>
                     <ModalFooter>
-                        <Button colorScheme='blue' mr={3} onClick={onClose}>
+                        {info.isSelf ?
+                            <>
+                                <Button htmlFor="updatepic" colorScheme='green' style={isSmall ? { marginRight: '50px' } :
+                                    { marginRight: '200px' }}>
+                                    <label htmlFor="updatepic" >
+                                        Edit profile pic
+                                    </label>
+                                    <input type="file" name="updatepic" id="updatepic" style={{ display: 'none' }}
+                                        accept='image/*' onChange={info.handleupdatepic} />
+                                </Button>
+                            </>
+                            : null}
+                        <Button colorScheme='blue' mr={1} onClick={onClose}>
                             Close
                         </Button>
 
                     </ModalFooter>
                 </ModalContent>
-            </Modal>
+            </Modal >
             : <Modal isOpen={isOpen} onClose={onClose}>
                 <ModalOverlay />
                 <ModalContent style={isSmall ? { width: '80vw', height: '50vh', textAlign: 'center' } : { textAlign: 'center' }}>
@@ -39,12 +51,11 @@ const Avatar1 = ({ info, isOpen, onClose }) => {
                     <img style={{ height: '15rem', objectFit: 'contain' }} src={info.previewpic} />
 
                     <ModalFooter>
-                        <Button colorScheme='green' mr={3} onClick={() => { onClose(); info.sendfile()}}>
-                        Send to {info.receiver}
-                    </Button>
-
-                </ModalFooter>
-            </ModalContent>
+                        <Button colorScheme='green' mr={3} onClick={() => { onClose(); info.sendfile() }}>
+                            Send to {info.receiver}
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
             </Modal >}
         </>
     )

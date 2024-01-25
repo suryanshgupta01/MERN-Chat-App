@@ -41,6 +41,7 @@ code {
 
 .names {
   font-size: medium;
+  height: 72vh;
 
 }
 
@@ -88,14 +89,34 @@ code {
   background-color: rgb(186, 179, 179);
 }
 
+.loading-animation {
+  height: 5rem;
+  animation: blink infinite 2s;
+
+}
+
+@keyframes blink {
+  0% {
+    opacity: 0.4;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.4;
+  }
+}
+
 .convobox {
   width: 68vw;
+  height: 82vh;
   z-index: 2;
   position: relative;
-  height: 82vh;
   margin: 1rem;
   background-color: white;
-  opacity: 0.85;
+  opacity: 0.95;
 }
 
 .footer {
@@ -237,6 +258,16 @@ code {
 .makecol {
   display: flex;
   flex-direction: column;
+}
+
+.makecenter {
+  display: flex;
+  margin-left:50%;
+  margin-top: 50%;
+  transform: translate(-50%, -50%);
+  background-color: blue;
+  justify-content: center;
+  align-items: center;
 }
 
 .delete {

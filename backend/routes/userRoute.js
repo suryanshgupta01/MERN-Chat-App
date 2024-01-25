@@ -63,4 +63,16 @@ router.post('/register', async (req, res) => {
     }
 
 })
+router.put('/updatepic/:id',  async (req, res) => {
+    try {
+        const user = await USER.findById(req.params.id)
+        user.profilePic = req.body.profilePic
+        await user.save()
+        res.json({ 'msg': 'profile pic updated' })
+    }
+    catch (error) {
+        console.log(error)
+        res.json({ 'msg': 'unable to update pic' })
+    }
+})
 module.exports = router
