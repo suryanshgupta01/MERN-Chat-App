@@ -24,16 +24,18 @@ const PORT = process.env.PORT || 4002
 
 const server = app.listen(PORT, console.log("server initiated at port", PORT))
 
-const io = require("socket.io")(server, {
+const io = require("socket.io")(server
+    , {
     pingTimeout: 30000,
     cors: {
-        // origin: "http://localhost:3000",
-        origin: "https://suryansh-mern-chat-app.netlify.app"
+        origin: "http://localhost:3000",
+        // origin: "https://suryansh-mern-chat-app.netlify.app"
     },
-});
+}
+);
 
 io.on("connection", (socket) => {
-    // console.log("Connected to socket.io");
+    // console.log("Connected to socket.io",socket.id);
     socket.on("setup", (userData) => {
         socket.join(userData._id);
         // console.log(userData._id, "connected");
@@ -50,8 +52,8 @@ io.on("connection", (socket) => {
         socket.in(msg.reciever).emit('msg received', msg)
     })
 
-    socket.on('typing', (room) => {
-        socket.in(room).emit('typing')
+    socket.on('typing', ({room,typer}) => {
+        socket.in(room).emit('typing', typer)
     })
 
     socket.on('stoptyping', (room) => {

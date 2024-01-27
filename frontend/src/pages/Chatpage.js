@@ -8,7 +8,6 @@ import Loading from '../components/Loading';
 import io from "socket.io-client";
 import Lottie from "react-lottie";
 import animationData from "../components/Animation - Typing.json";
-import { set } from 'mongoose';
 
 const address = "http://localhost:4000";
 var socket
@@ -24,7 +23,10 @@ export default function Chatpage() {
     const client = axios.create({
         baseURL: address
     });
-
+    useEffect(() => {
+        fetchusers()
+        fetchchats()
+    }, []);
     const [chats, setchats] = useState([]);
     const [users, setusers] = useState([]);
     const [idnamemap, setidnamemap] = useState(new Map());
@@ -41,7 +43,6 @@ export default function Chatpage() {
         file.onloadend = async () => {
             localStorage.setItem('userinfo', JSON.stringify({ profilePic: file.result, name: userinfo.name, email: userinfo.email, token: userinfo.token, _id: userinfo._id }))
             setuserinfo({ ...userinfo, profilePic: file.result })
-            
             const { data } = await client.put(`/user/updatepic/${userinfo._id}`,
                 { profilePic: file.result, }, {
                 headers: {
@@ -49,7 +50,6 @@ export default function Chatpage() {
                     'authorization': `Bearer ${userinfo.token}`
                 }
             })
-            console.log(data)
         }
         file.readAsDataURL(e.target.files[0])
     }
@@ -61,52 +61,58 @@ export default function Chatpage() {
         socket = io(address);
         socket.emit("setup", userinfo);
         socket.on("connected", () => setSocketConnected(true));
-        socket.on("typing", () => setIsTyping(true));
+        socket.on("typing", (typer) => { if (typer == userinfo._id) setIsTyping(true) });
         socket.on("stoptyping", () => setIsTyping(false));
     }, []);
 
     let funcused = false
     useEffect(() => {
         socket.on("msg received", (msg) => {
-            setactive(prevState => {
-                const n = prevState.conversation.length;
-                if (n === 0 || getcustomedate(prevState.conversation[n - 1]) !== getcustomedate({ createdAt: new Date() })) {
-                    prevState = {
-                        ...prevState,
-                        conversation: [...prevState.conversation, { isDate: true, message: getcustomedate({ createdAt: new Date() }) }]
-                    };
+            setopponentinfo(prevState1 => {
+                if (msg.sender == prevState1._id) {
+                    setactive(prevState => {
+                        const n = prevState.conversation.length;
+                        if (n === 0 || getcustomedate(prevState.conversation[n - 1]) !== getcustomedate({ createdAt: new Date() })) {
+                            prevState = {
+                                ...prevState,
+                                conversation: [...prevState.conversation, { isDate: true, message: getcustomedate({ createdAt: new Date() }) }]
+                            };
+                        }
+                        if (n == 0 || prevState.conversation[n - 1].isDate || msg._id !== prevState.conversation[n - 1]._id) {
+                            // if (document.visibilityState !== 'visible') {
+
+
+                            return {
+                                ...prevState,
+                                conversation: [...prevState.conversation, msg]
+                            }
+                        } else return prevState
+                    })
+                } else {
+                    setidnamemap(prevState => {
+                        const senderinfo = prevState.get(msg.sender)
+                        const sendnotification = () => {
+                            new Notification(`${senderinfo.name} - Whatsapp Clone`, {
+                                body: msg.content,
+                                // tag: 'latest_message',
+                                icon: senderinfo.profilePic ? senderinfo.profilePic : "https://www.pngitem.com/pimgs/m/146-1468479_my-profile-icon-blank-profile-picture-circle-hd.png",
+                                silent: true,
+                            })
+                        }
+                        if (!funcused) {
+                            funcused = true
+                            sendnotification()
+                            setTimeout(() => {
+                                funcused = false
+                            }, 7000);
+                        }
+                        return prevState
+
+                    })
+
                 }
-                if (n == 0 || prevState.conversation[n - 1].isDate || msg._id !== prevState.conversation[n - 1]._id) {
-                    if (document.visibilityState !== 'visible') {
-                        setidnamemap(prevState => {
-                            const senderinfo = prevState.get(msg.sender)
-                            const sendnotification = () => {
-                                console.log("called at ", new Date())
-                                new Notification(`${senderinfo.name} - Whatsapp Clone`, {
-                                    body: msg.content,
-                                    // tag: 'latest_message',
-                                    icon: senderinfo.profilePic ? senderinfo.profilePic : "https://www.pngitem.com/pimgs/m/146-1468479_my-profile-icon-blank-profile-picture-circle-hd.png",
-                                    silent: true,
-                                })
-                            }
-                            if (!funcused) {
-                                funcused = true
-                                sendnotification()
-                                setTimeout(() => {
-                                    funcused = false
-                                }, 20000);
-                            }
-                            return prevState
-
-                        })
-                    }
-
-                    return {
-                        ...prevState,
-                        conversation: [...prevState.conversation, msg]
-                    }
-                } else return prevState
-            });
+                return prevState1
+            })
             const recieverID = msg.reciever
             const senderID = msg.sender
             setchats(prevChats => {
@@ -137,13 +143,11 @@ export default function Chatpage() {
             }
         })
         setusers(data.filter((ele) => { return ele._id.toString() !== userinfo._id }))
-        console.log(users)
         let updatedMap = new Map();
         data.forEach((ele) => {
             updatedMap.set(ele._id.toString(), ele);
         })
         setidnamemap(updatedMap);
-        console.log(updatedMap)
         setloading(false)
     }
     const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -196,15 +200,7 @@ export default function Chatpage() {
         setloading(false)
 
     }
-    useEffect(() => {
 
-        fetchusers()
-        fetchchats()
-
-        // fetchmsgs()
-        // fetchselectedchat()
-
-    }, []);
     const searchuser = (name1) => {
         if (name1 === "") {
             setselected([])
@@ -364,7 +360,7 @@ export default function Chatpage() {
         if (!socketConnected) return;
         if (!typing) {
             setTyping(true);
-            socket.emit("typing", active._id);
+            socket.emit("typing", { room: active._id, typer: opponentinfo._id });
         }
         let lastTypingTime = new Date().getTime();
         var timerLength = 2000;
@@ -404,11 +400,9 @@ export default function Chatpage() {
             <div className='megadiv'>
 
                 <div className='navbar'>
-                    {/* <Tooltip hasArrow arrowSize={15} label='Tap to find user' bg='red.900'> */}
                     <Button ref={btnRef} colorScheme='green' onClick={onOpen}>
                         Search User
                     </Button>
-                    {/* </Tooltip> */}
                     <p >MERN STACK CHAT APP</p>
                     <div className="btn-group " style={{ right: '30px' }} >
                         <button type="button" className="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
