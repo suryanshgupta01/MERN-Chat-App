@@ -28,8 +28,8 @@ const io = require("socket.io")(server
     , {
     pingTimeout: 30000,
     cors: {
-        origin: "http://localhost:3000",
-        // origin: "https://suryansh-mern-chat-app.netlify.app"
+        // origin: "http://localhost:3000",
+        origin: "https://suryansh-mern-chat-app.netlify.app"
     },
 }
 );
