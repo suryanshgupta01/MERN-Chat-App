@@ -18,7 +18,7 @@ export default function Login() {
 
     const submitHandler = async () => {
         setLoading(true)
-        axios.post('http://localhost:4000/user/login', {
+        axios.post('https://mern-chat-app-84iv.onrender.com/user/login', {
             email: email,
             password: password
         }).then((data) => {
@@ -59,13 +59,21 @@ export default function Login() {
                 </InputGroup>
             </FormControl>
             <Button
-                colorScheme="blue"
+                colorScheme="green"
                 width="100%"
                 style={{ marginTop: 15 }}
                 onClick={submitHandler}
                 isLoading={loading}
             >
                 Login
+            </Button>
+            <Button
+                colorScheme="green"
+                width="100%"
+                style={{ marginTop: 15 }}
+                onClick={() => { setEmail("email@gmail.com"); setPassword("email@gmail.com"); }}
+            >
+                Use Guest Details
             </Button>
 
         </VStack>

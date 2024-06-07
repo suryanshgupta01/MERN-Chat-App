@@ -9,7 +9,7 @@ import io from "socket.io-client";
 import Lottie from "react-lottie";
 import animationData from "../components/Animation - Typing.json";
 
-const address = "http://localhost:4000";
+const address = "https://mern-chat-app-84iv.onrender.com";
 var socket
 const defaultOptions = {
     loop: true,
@@ -31,12 +31,14 @@ export default function Chatpage() {
     const [users, setusers] = useState([]);
     const [idnamemap, setidnamemap] = useState(new Map());
     const [selected, setselected] = useState([]);
-    const [loading, setloading] = useState(true);
+    const [loading, setloading] = useState(false);
     const [active, setactive] = useState({ name: "SELECT USER TO INTERACT", email: "", conversation: [], people: [{ email: "" }, { email: "" }], _id: "" });
     const [socketConnected, setSocketConnected] = useState(false);
     const [typing, setTyping] = useState(false);
     const [istyping, setIsTyping] = useState(false);
     const [opponentinfo, setopponentinfo] = useState({});
+    const [chatloading, setchatloading] = useState(false);
+
     const handleupdatepic = async (e) => {
         e.preventDefault()
         const file = new FileReader()
@@ -173,12 +175,14 @@ export default function Chatpage() {
     }
     const fetchchats = async () => {
         // setloading(true)
+        setchatloading(true)
         const { data } = await client.get(`/chat`, {
             headers: {
                 'Content-Type': 'application/json',
                 'authorization': `Bearer ${userinfo.token}`
             }
         })
+        setchatloading(false)
         // console.log( (userinfo._id))
         const updated = addDates(data)
         setchats(updated)
@@ -378,10 +382,31 @@ export default function Chatpage() {
         if (url.startsWith("data:image") && url.includes('base64')) return true;
         return false
     }
+    const handlelatestmsg = (msg) => {
+        if (msg.length > 20) return msg.slice(0, 20) + "..."
+        return msg
+    }
     const logouthandler = () => {
         localStorage.removeItem('userinfo')
         window.location.reload()
     }
+    const islink = (msg) => {
+        const prefixes = ["http://", "https://", "ftp://", "sftp://", "smtp://", "pop://", "imap://", "telnet://"];
+
+        for (let word of prefixes) {
+            if (msg.startsWith(word)) return true
+        }
+
+        return false
+    }
+    const islink1 = (msg) => {
+        const suffixes = [".com", ".org", ".net", ".gov", ".edu", ".mil", ".int", ".info", ".biz", ".me", ".io", ".app", ".co", ".tv", ".xyz"];
+        for (let word of suffixes) {
+            if (msg.includes(word)) return true
+        }
+        return false
+    }
+
     const [previewinfo, setpreviewinfo] = useState({});
     const { isOpen, onOpen, onClose } = useDisclosure()
     const { isOpen: isAvatarOpen, onOpen: onAvatarOpen, onClose: onAvatarClose } = useDisclosure()
@@ -399,11 +424,11 @@ export default function Chatpage() {
         <>
             <div className='megadiv'>
 
-                <div className='navbar'>
+                <div className='navbar' style={{  zIndex: '4' }}>
                     <Button ref={btnRef} colorScheme='green' onClick={onOpen}>
                         Search User
                     </Button>
-                    <p >MERN STACK CHAT APP</p>
+                    <p style={{marginTop:'10px'}}><b>Chat Central</b></p>
                     <div className="btn-group " style={{ right: '30px' }} >
                         <button type="button" className="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                             {/* <img src={userinfo.profilePic} alt='user pic here' style={{ objectFit: 'cover', width: '30px', height: '30px', borderRadius: '50%' }} /> */}
@@ -461,7 +486,7 @@ export default function Chatpage() {
                             </DrawerContent>
                         </Drawer>
                         <div className='names' >
-                            {(chats.length > 0) ? chats.map((ele) => (
+                            {!chatloading ? chats.map((ele) => (
                                 <>
                                     {ele.isselected ? (
                                         <p className='singlename' value={ele._id} key={ele._id} >
@@ -474,10 +499,8 @@ export default function Chatpage() {
                                                     <br />
                                                     {ele.latestmessage ? (
                                                         !isImage(ele.latestmessage.content) ? (
-                                                            <p>
-                                                                {ele.latestmessage.content.length > 20
-                                                                    ? ele.latestmessage.content.slice(0, 20).toLowerCase() + '...'
-                                                                    : ele.latestmessage.content}
+                                                            <p title={ele.latestmessage.content}>
+                                                                {handlelatestmsg(ele.latestmessage.content)}
                                                             </p>
                                                         ) : (
                                                             <p className='makerow'><img src={ele.latestmessage.content} width="20px" style={{ borderRadius: '0', marginRight: '10px' }} /> Photo</p>
@@ -541,13 +564,20 @@ export default function Chatpage() {
                                         </p> :
                                             (<div className={'singlechat ' + (ele.sender === userinfo._id ? ' right' : 'left')} key={ele._id}>
                                                 {/* {ele.sender === userinfo._id ? 'YOU' : opponentname}: */}
-                                                {isImage(ele.content) ? <img src={ele.content} style={{ width: '22.5rem' }} alt="image should be here" /> : ele.content}
+                                                {isImage(ele.content) ? <img src={ele.content} style={{ width: '22.5rem' }} alt="image should be here" /> :
+                                                        
+                                                    ele.content.split(" ").map((ele) => {
+                                                        if (islink(ele)) return (<u><a href={ele} target='_blank' style={{ color: 'rgb(61, 90, 220)' }}>{ele+' '}</a></u>)
+                                                        else if (islink1(ele)) return (<u><a href={"https://" + ele} target='_blank' style={{ color: 'rgb(61, 90, 220)' }}>{ele+' '}</a></u>)
+                                                        else return ele+' '
+                                                    })
+                                                }
                                                 <p className='time'>
                                                     {prettifyTime(ele.createdAt)}
                                                 </p></div>
                                             ))}
                                 </>
-                                : <p className='noneselect'>NO SELECTED CHAT</p>
+                                : <p className='noneselect'>Central point to connect with peers!</p>
                             }
                             {istyping ? <div className='typing'>
                                 <Lottie
@@ -558,7 +588,7 @@ export default function Chatpage() {
                                 />
                             </div> : <></>}
                         </ReactScrollToBottom>
-                        <div className='msginput'>
+                        <div className='msginput' >
 
                             <label htmlFor="file" className="sendfile">
                                 <svg

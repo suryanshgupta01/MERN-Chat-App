@@ -13,7 +13,7 @@ export default function Signup() {
     const handleClick = () => setShow(!show);
     const toast = useToast();
     const history = useHistory();
-    const address = "http://localhost:4000";
+    const address = "https://mern-chat-app-84iv.onrender.com";
     const client = axios.create({ baseURL: address });
     const [name, setName] = useState();
     const [email, setEmail] = useState();
@@ -112,7 +112,7 @@ export default function Signup() {
                 />
             </FormControl>
             <Button
-                colorScheme="blue"
+                colorScheme="green"
                 width="100%"
                 style={{ marginTop: 15 }}
                 onClick={submitHandler}

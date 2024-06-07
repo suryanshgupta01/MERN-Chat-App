@@ -1,15 +1,16 @@
 :root {
   --base: #20eb45;
   --hover-brightness: 1.2;
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif
 }
 
 body {
   margin: 0;
   overflow-x: hidden;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  /* font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
-  font-family: 'Roboto';
+  font-family: 'Roboto'; */
   padding: 0;
   box-sizing: border-box;
   -webkit-font-smoothing: antialiased;
@@ -30,13 +31,19 @@ code {
 }
 
 .userlist {
-  width: 30vw;
-  height: 82vh;
+  width: 32vw;
   background-color: rgb(20, 189, 20);
-  margin: 1rem;
+  margin: 0.5rem;
+  border-radius: 10px;
   /* border-radius: 20px 0px 0px 20px; */
   overflow: auto;
   padding: 2rem;
+}
+
+.userlist,
+.convobox {
+  opacity: 0.95;
+  height: 84vh;
 }
 
 .names {
@@ -111,21 +118,20 @@ code {
 
 .convobox {
   width: 68vw;
-  height: 82vh;
-  z-index: 2;
+  /* z-index: 1; */
   position: relative;
-  margin: 1rem;
+  margin: 0.5rem;
+  margin-left: 0;
+  border-radius: 10px;
   background-color: white;
-  opacity: 0.95;
 }
 
 .footer {
-  /* bottom: 0; */
+  margin-top: 1rem;
   width: 100vw;
   padding: 0.5rem 0;
-  /* opacity: 0.5; */
   text-align: center;
-  background-color: rgb(238, 241, 200);
+  background-color: rgb(220, 218, 213);
 }
 
 .heading {
@@ -202,7 +208,7 @@ code {
 .navbar {
   width: 100vw;
   /* height: 20vh; */
-  /* opacity: 0.8; */
+  opacity: 0.95;
   display: flex;
   padding: 0.25rem 1.5rem;
   justify-content: space-between;
@@ -213,10 +219,11 @@ code {
 
 .megadiv {
   display: flex;
-  height: 100vh;
+  height: 110vh;
   /* overflow: hidden; */
   /* z-index: 1; */
   background-image: url('./HD-wallpaper-whatsapp-background-cool-dark-green-new-theme-whatsapp.jpg');
+  /* background-repeat:round; */
   background-position: center;
   flex-direction: column;
 }
@@ -237,6 +244,7 @@ code {
   /* position: relative; */
   /* margin-top: auto; */
   /* bottom: 3rem; */
+  margin-top: auto;
   align-items: center;
   font-size: 1.5rem;
   flex-direction: row;
@@ -262,7 +270,7 @@ code {
 
 .makecenter {
   display: flex;
-  margin-left:50%;
+  margin-left: 50%;
   margin-top: 50%;
   transform: translate(-50%, -50%);
   background-color: blue;
@@ -328,7 +336,7 @@ code {
   color: white;
 }
 
-@media (width<500px) {
+@media (width<700px) {
 
   .navbar p {
     display: none;
@@ -337,12 +345,15 @@ code {
 
   .convobox,
   .userlist {
-    height: 88vh;
+    height: 90vh;
+  }
+  .megadiv{
+    height: 100vh;
   }
 
   .convo {
     /* background-color: red; */
-    height: 80.5%;
+    height: 81.5%;
   }
 
   .singlechat>img {
