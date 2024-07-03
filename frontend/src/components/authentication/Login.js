@@ -18,7 +18,7 @@ export default function Login() {
 
     const submitHandler = async () => {
         setLoading(true)
-        axios.post('https://mern-chat-app-84iv.onrender.com/user/login', {
+        axios.post('https://mern-chat-app-m2qw.onrender.com/user/login', {
             email: email,
             password: password
         }).then((data) => {

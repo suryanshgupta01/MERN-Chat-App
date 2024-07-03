@@ -13,7 +13,7 @@ export default function Signup() {
     const handleClick = () => setShow(!show);
     const toast = useToast();
     const history = useHistory();
-    const address = "https://mern-chat-app-84iv.onrender.com";
+    const address = "https://mern-chat-app-m2qw.onrender.com";
     const client = axios.create({ baseURL: address });
     const [name, setName] = useState();
     const [email, setEmail] = useState();

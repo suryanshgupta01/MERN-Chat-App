@@ -9,7 +9,7 @@ import io from "socket.io-client";
 import Lottie from "react-lottie";
 import animationData from "../components/Animation - Typing.json";
 
-const address = "https://mern-chat-app-84iv.onrender.com";
+const address = "https://mern-chat-app-m2qw.onrender.com";
 var socket
 const defaultOptions = {
     loop: true,
@@ -424,11 +424,11 @@ export default function Chatpage() {
         <>
             <div className='megadiv'>
 
-                <div className='navbar' style={{  zIndex: '4' }}>
+                <div className='navbar' style={{ zIndex: '4' }}>
                     <Button ref={btnRef} colorScheme='green' onClick={onOpen}>
                         Search User
                     </Button>
-                    <p style={{marginTop:'10px'}}><b>Chat Central</b></p>
+                    <p style={{ marginTop: '10px' }}><b>Chat Central</b></p>
                     <div className="btn-group " style={{ right: '30px' }} >
                         <button type="button" className="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                             {/* <img src={userinfo.profilePic} alt='user pic here' style={{ objectFit: 'cover', width: '30px', height: '30px', borderRadius: '50%' }} /> */}
@@ -565,11 +565,11 @@ export default function Chatpage() {
                                             (<div className={'singlechat ' + (ele.sender === userinfo._id ? ' right' : 'left')} key={ele._id}>
                                                 {/* {ele.sender === userinfo._id ? 'YOU' : opponentname}: */}
                                                 {isImage(ele.content) ? <img src={ele.content} style={{ width: '22.5rem' }} alt="image should be here" /> :
-                                                        
+
                                                     ele.content.split(" ").map((ele) => {
-                                                        if (islink(ele)) return (<u><a href={ele} target='_blank' style={{ color: 'rgb(61, 90, 220)' }}>{ele+' '}</a></u>)
-                                                        else if (islink1(ele)) return (<u><a href={"https://" + ele} target='_blank' style={{ color: 'rgb(61, 90, 220)' }}>{ele+' '}</a></u>)
-                                                        else return ele+' '
+                                                        if (islink(ele)) return (<u><a href={ele} target='_blank' style={{ color: 'rgb(61, 90, 220)' }}>{ele + ' '}</a></u>)
+                                                        else if (islink1(ele)) return (<u><a href={"https://" + ele} target='_blank' style={{ color: 'rgb(61, 90, 220)' }}>{ele + ' '}</a></u>)
+                                                        else return ele + ' '
                                                     })
                                                 }
                                                 <p className='time'>
