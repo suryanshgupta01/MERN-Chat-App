@@ -5,7 +5,7 @@ import { useHistory } from "react-router";
 import { useToast } from "@chakra-ui/toast";
 const isEmail = (mail) => {
     mail = mail.toLowerCase()
-    if (mail.includes('.com') && mail.includes('@')) return true
+    if (mail.includes('@') && mail.split('@').length == 2 && mail.split('@')[1].includes('.')) return true
     return false;
 }
 export default function Signup() {
