@@ -14,7 +14,9 @@ app.use(bodyParser.json({ limit: '10mb' }));
 app.use(cors())
 app.use(express.json())
 
-
+app.get('/', (req, res) => {
+    res.send("Server is up and running")
+})
 
 app.use('/user', userRoute)
 app.use('/msg', msgRoute)
@@ -26,12 +28,12 @@ const server = app.listen(PORT, console.log("server initiated at port", PORT))
 
 const io = require("socket.io")(server
     , {
-    pingTimeout: 30000,
-    cors: {
-        // origin: "http://localhost:3000",
-        origin: "https://suryansh-mern-chat-app.netlify.app"
-    },
-}
+        pingTimeout: 30000,
+        cors: {
+            // origin: "http://localhost:3000",
+            origin: "https://suryansh-mern-chat-app.netlify.app"
+        },
+    }
 );
 
 io.on("connection", (socket) => {
@@ -52,7 +54,7 @@ io.on("connection", (socket) => {
         socket.in(msg.reciever).emit('msg received', msg)
     })
 
-    socket.on('typing', ({room,typer}) => {
+    socket.on('typing', ({ room, typer }) => {
         socket.in(room).emit('typing', typer)
     })
 
